@@ -1,13 +1,11 @@
 from bs4 import BeautifulSoup
 from telegram import * 
 from telegram.ext import * 
-import requests
 from selenium import webdriver
 import datetime
-
+import pytz
 #this function gets several news from several sites and returns the string
 def get_news():
-    #page = requests.get("https://24.kz/kz/zha-aly-tar")
     soup = BeautifulSoup(html, 'html.parser')
     div_itemBlock = soup.find('div', {'id':'itemListLeading'})
     for i in div_itemBlock.find_all('div', {'class':'itemContainer'}):
@@ -16,15 +14,27 @@ def get_news():
     
     return n
 #this function sends a message with the news
-
-def give_news(update, context):
+def give_news_notime(update:Update, context:CallbackContext):
     msg = n.pop(0)
-    bot.send_message(
+    
+    context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg[0]
     )
-    bot.send_message(
+    context.bot.send_message(
         chat_id=update.effective_chat.id,
+        text=msg[1]
+    )
+
+def give_news(context:CallbackContext):
+    msg = n.pop(0)
+    job=context.job
+    context.bot.send_message(
+        job.context,
+        text=msg[0]
+    )
+    context.bot.send_message(
+        job.context,
         text=msg[1]
     )
 
@@ -67,9 +77,13 @@ def ending(update:Update, context:CallbackContext):
         text = f"Okay, I've set news to be sent on {d} at {int(h)-1}.55"
     )
     if d == "MWF":
-        j.run_daily(callback=give_news, days=(0,2,4), time=datetime.time(hour=int(h)-1, minute=55, second=00))
+        context.job_queue.run_daily(callback=give_news, days=(0,2,4),
+        time=datetime.time(hour=int(h)-1, minute=55, second=00, tzinfo=pytz.timezone('Asia/Almaty')), 
+        context=update.message.chat_id)
     else:
-        j.run_daily(callback=give_news, days=(1,3), time=datetime.time(hour=int(h)-1, minute=55, second=00))
+        context.job_queue.run_daily(callback=give_news, days=(1,3), 
+        time=datetime.time(hour=int(h)-1, minute=55, second=00, tzinfo=pytz.timezone('Asia/Almaty')), 
+        context=update.message.chat_id)
     
     return ConversationHandler.END
 
@@ -91,7 +105,7 @@ html = driver.page_source
 n = []
 n = get_news()
 
-dp.add_handler(CommandHandler('news', give_news))
+dp.add_handler(CommandHandler('news', give_news_notime))
 
 j = updater.job_queue
 conv_handler = ConversationHandler(
