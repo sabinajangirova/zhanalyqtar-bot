@@ -95,11 +95,11 @@ def cancel(update:Update, context:CallbackContext):
 
     return ConversationHandler.END
 
-bot = Bot("1670596826:AAGNUZCPmm_vHxNGuU4-zfUGiTv5h77eXlU")
+bot = Bot("TOKEN")
 
-updater = Updater("1670596826:AAGNUZCPmm_vHxNGuU4-zfUGiTv5h77eXlU", use_context=True)
+updater = Updater("TOKEN", use_context=True)
 dp = updater.dispatcher
-driver = webdriver.Chrome(executable_path="c:\\Users\\Мечта\\Desktop\\chromedriver")
+driver = webdriver.Chrome(executable_path="PATH")
 driver.get("https://24.kz/kz/zha-aly-tar")
 html = driver.page_source
 n = []
